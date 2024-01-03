@@ -1,23 +1,21 @@
-(* Read the lines of the file into a string list*)
-let lines name = In_channel.input_lines (open_in name)
-let is_digit d = d >= '0' && d <= '9'
+(* read_lines reads each line in the file into a string list*)
+let read_lines file = In_channel.input_lines (In_channel.open_text file)
+let first_digit line = line.[Str.search_forward (Str.regexp "[0-9]") line 0]
+
+let last_digit line =
+  line.[Str.search_backward (Str.regexp "[0-9]") line (String.length line - 1)]
+
+let is_digit c = Char.code c >= Char.code '0' && Char.code c <= Char.code '9'
 let to_digit c = Char.code c - Char.code '0'
 
-(* First digit and last digit *)
-let fst_lst s =
-  let rec first_digit s i =
-    if is_digit s.[i] then s.[i] else first_digit s (i + 1)
+let part1_calibration_sum file =
+  let calibration_value line =
+    (10 * to_digit (first_digit line)) + to_digit (last_digit line)
   in
-  let rec last_digit s i =
-    if is_digit s.[i] then s.[i] else last_digit s (i - 1)
-  in
-  (first_digit s 0, last_digit s (String.length s - 1))
+  let calibration_list file = List.map calibration_value (read_lines file) in
+  List.fold_left ( + ) 0 (calibration_list file)
 
-let calib_value s =
-  let fst, lst = fst_lst s in
-  (10 * to_digit fst) + to_digit lst
-
-let digit_words =
+let word_to_digit =
   [
     ("zero", 0);
     ("one", 1);
@@ -31,26 +29,42 @@ let digit_words =
     ("nine", 9);
   ]
 
-(* iterate through the string character by character and find the possible numbers*)
+let rec check_start line word_map i =
+  match word_map with
+  | [] -> None
+  | h :: t ->
+      if
+        String.starts_with ~prefix:(fst h)
+          (String.sub line i (String.length line - i))
+      then Some (snd h)
+      else check_start line t i
 
-let substr s i = String.sub s i (String.length s - i)
+let rec check_end line word_map i =
+  match word_map with
+  | [] -> None
+  | h :: t ->
+      if String.ends_with ~suffix:(fst h) (String.sub line 0 (i + 1)) then
+        Some (snd h)
+      else check_end line t i
 
-let string_begins_with s i =
-  List.find_map
-    (fun (word, value) ->
-      if String.starts_with ~prefix:word (substr s i) then Some value else None)
-    digit_words
+let rec parse_first_digit line i =
+  if is_digit line.[i] then to_digit line.[i]
+  else
+    match check_start line word_to_digit i with
+    | None -> parse_first_digit line (i + 1)
+    | Some a -> a
 
-let match_digit s i =
-  if is_digit s.[i] then Some (to_digit s.[i]) else string_begins_with s i
+let rec parse_last_digit line i =
+  if is_digit line.[i] then to_digit line.[i]
+  else
+    match check_end line word_to_digit i with
+    | None -> parse_last_digit line (i - 1)
+    | Some a -> a
 
-let find_vals line =
-  let rec first i =
-    match match_digit line i with Some digit -> digit | None -> first (i + 1)
-  in
-  let rec last i =
-    match match_digit line i with Some digit -> digit | None -> last (i - 1)
-  in
-  let first_digit = first 0 in
-  let last_digit = last (String.length line - 1) in
-  (first_digit * 10) + last_digit
+let vals line =
+  (parse_first_digit line 0, parse_last_digit line (String.length line - 1))
+
+let part2_calibration_sum file =
+  let calibration_value line = (10 * fst (vals line)) + snd (vals line) in
+  let calibration_list file = List.map calibration_value (read_lines file) in
+  List.fold_left ( + ) 0 (calibration_list file)
