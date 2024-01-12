@@ -36,3 +36,24 @@ let score_card card_string =
 
 let total_points file =
   List.fold_left ( + ) 0 (List.map score_card (lines file))
+
+let create_array string_lines = Array.make (List.length string_lines) 1
+
+(*For a card, find the number of matches*)
+(*Add 1 to the corresponding following cards for that specific card*)
+(*Since 1 needs to be added for all occurences, add array.(i) to array.(i+j)*)
+let solve_card card_string int_array i =
+  let score = no_cards_present (winning_and_had card_string) in
+  for j = i + 1 to i + score do
+    int_array.(j) <- int_array.(j) + int_array.(i)
+  done
+
+let sum_no_cards file =
+  let the_lines = lines file in
+  let array = create_array the_lines in
+  let line_array = Array.of_list the_lines in
+  for i = 0 to Array.length line_array - 1 do
+    (*solve for one card at a time*)
+    solve_card line_array.(i) array i
+  done;
+  Array.fold_left ( + ) 0 array
