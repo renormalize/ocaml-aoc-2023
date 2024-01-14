@@ -1,0 +1,4 @@
+(library
+ (name day5)
+ (libraries str))
+
