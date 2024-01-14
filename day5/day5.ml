@@ -59,3 +59,25 @@ let min_location_from_seeds file =
   let map_list = create_map_list (List.tl list_list) in
   let find_result seed = List.fold_left mapped_dest_value seed map_list in
   List.map find_result seeds |> List.sort compare |> List.hd
+
+(*brute force method of computing the location for each seed in the range and finding min*)
+let solve_seed_ranges file =
+  let line_list = lines file in
+  let list_list = split_string_list line_list in
+  let seeds = Array.of_list (parse_seeds (List.hd (List.hd list_list))) in
+  let map_list = create_map_list (List.tl list_list) in
+  let find_result seed = List.fold_left mapped_dest_value seed map_list in
+  let min_val = ref max_int in
+  let arr_len = ref (Array.length seeds) in
+  let i = ref 0 in
+  while !i <= !arr_len - 1 do
+    let j = ref seeds.(!i) in
+    while !j <= seeds.(!i) + seeds.(!i + 1) - 1 do
+      let result_seed = find_result !j in
+      if !min_val > result_seed then min_val := result_seed
+      else min_val := !min_val;
+      j := !j + 1
+    done;
+    i := !i + 2
+  done;
+  !min_val
