@@ -1,4 +1,4 @@
 (executables
- (public_names 1 2 4 5 6)
- (names day1bin day2bin day4bin day5bin day6bin)
- (libraries day1 day2 day4 day5 day6))
+ (public_names 1 2 4 5 6 7)
+ (names day1bin day2bin day4bin day5bin day6bin day7bin)
+ (libraries day1 day2 day4 day5 day6 day7))
